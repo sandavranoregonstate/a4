@@ -118,7 +118,6 @@ def display_info():
                         "status_code": response.status_code,
                         "content": response.text}), response.status_code
 
-
 if __name__ == '__main__':
     app.run(host='localhost', port=8080, debug=True)
     
