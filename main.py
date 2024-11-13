@@ -88,12 +88,36 @@ def redirect_1():
             f"grant_type=authorization_code"
         response = requests.post(url)
         token_response = response.json()
-        return redirect(url_for('display_info', response=token_response))
+        access_token = token_response.get("access_token")
+        print(access_token)
+        return redirect(url_for('display_info', access_token=access_token))
+
+from flask import request, jsonify
 
 @app.route("/display_info")
 def display_info():
-    response = request.args.get("response")
-    return response
+    access_token = request.args.get("access_token")
+    
+    # Set up the headers for the request with the provided access token
+    headers = {
+        'Authorization': f'Bearer {access_token}'
+    }
+    
+    # Make the request to get user info
+    response = requests.get('https://www.googleapis.com/oauth2/v3/userinfo', headers=headers)
+    
+    # Check if the request was successful and the content is JSON
+    if response.status_code == 200: #and response.headers.get('Content-Type') == 'application/json':
+        user_info = response.json()
+        name = user_info.get('name')
+        last_name = user_info.get('family_name')
+        return f"Name: {name}, Last Name: {last_name}"
+    else:
+        # If the response is not JSON or has an error, return the raw content for debugging
+        return jsonify({"error": "Failed to retrieve user info", 
+                        "status_code": response.status_code,
+                        "content": response.text}), response.status_code
+
 
 if __name__ == '__main__':
     app.run(host='localhost', port=8080, debug=True)
